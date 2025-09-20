@@ -1,57 +1,37 @@
 import { useState } from "react";
+import PreviewBox from "../components/PreviewBox";
+import UploadBox from "../components/UploadBox";
+import ActionBar from "../components/ActionBar";
 
 export default function Home() {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [pdfName, setPdfName] = useState("");
+  const [content, setContent] = useState("<h2>Upload a PDF to see preview</h2>");
+  const [rawText, setRawText] = useState("");
 
-  const handleGenerate = async () => {
-    const res = await fetch("/api/generate-pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, pdfName }),
-    });
+  const handleUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setRawText("Pretend extracted text from PDF...");
+      setContent("<h2>Sample Heading</h2><p>This is formatted content from the PDF.</p>");
+    }
+  };
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${pdfName || "document"}.pdf`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const handleDownload = () => alert("Download PDF triggered!");
+  const handleCopy = () => navigator.clipboard.writeText(rawText);
+  const handleClear = () => {
+    setRawText("");
+    setContent("<h2>Upload a PDF to see preview</h2>");
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: 600, margin: "auto" }}>
-      <h1>Content → PDF Generator</h1>
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center gap-6">
+      <h1 className="text-3xl font-bold text-blue-600">📄 PDF Chat</h1>
 
-      <input
-        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+      <div className="w-full max-w-3xl flex flex-col gap-6">
+        <UploadBox onUpload={handleUpload} />
+        <PreviewBox content={content} />
+      </div>
 
-      <textarea
-        style={{ width: "100%", height: 150, margin: "8px 0", padding: "8px" }}
-        placeholder="Write your content here..."
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-
-      <input
-        style={{ width: "100%", margin: "8px 0", padding: "8px" }}
-        placeholder="PDF File Name (without .pdf)"
-        value={pdfName}
-        onChange={(e) => setPdfName(e.target.value)}
-      />
-
-      <button
-        onClick={handleGenerate}
-        style={{ padding: "10px 20px", marginTop: 10 }}
-      >
-        Generate PDF
-      </button>
+      <ActionBar onDownload={handleDownload} onCopy={handleCopy} onClear={handleClear} />
     </div>
   );
 }
